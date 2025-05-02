@@ -1,3 +1,4 @@
 .SourceSageAssets/
 *.json
 *.log
+.env
