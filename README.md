@@ -1,8 +1,8 @@
 <div align="center">
 
-![Image](https://github.com/user-attachments/assets/55514756-c91e-4fe6-8204-73b73aa0bcbf)
+![Image](https://github.com/user-attachments/assets/04c68e93-e88b-45d2-bfab-8060c906dd7c)
 
-# 🤖 シンプルなGitHub Actions with Codex
+# [Codex-Workspace](https://github.com/Sunwood-ai-labs/Codex-Workspace)
 
 <p align="center">
   <img src="https://img.shields.io/badge/OpenAI_Codex-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI Codex">
