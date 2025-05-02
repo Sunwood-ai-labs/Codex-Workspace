@@ -23,9 +23,9 @@ This repository is a lightweight collection of workflows that harness the powerf
 ## ✨ Features
 
 - 💬 **Issue Auto-Response**: Codex analyzes new or updated issues and provides appropriate replies or fixes
-- 📝 **Documentation Quality Check**: Automatically checks the quality of README and other documentation, and proposes improvements via PR
-- 🔍 **Code Review**: Automatically reviews PR code and suggests improvements
-- 🌐 **README Translation**: Automatically translates README.md to Japanese and creates a PR
+- 📝 **Documentation Quality Check (Beta)**: Automatically checks the quality of README and other documentation, and proposes improvements via PR
+- 🔍 **Code Review (Beta)**: Automatically reviews PR code and suggests improvements
+- 🌐 **README Translation (Beta)**: Automatically translates README.md to Japanese and creates a PR
 
 ## 📦 Setup
 
