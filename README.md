@@ -88,11 +88,14 @@ GitHubリポジトリの Settings > Secrets で以下を追加してください
 ## ⚙️ ワークフロー一覧
 
 | ワークフロー | トリガー | 説明 |
-|------------|--------|------|
-| `issue-response-codex.yml` | Issue作成/更新 | Issueへの自動応答 |
-| `document-quality-check.yml` | Markdownファイル変更 | ドキュメント品質チェック |
-| `code-review-codex.yml` | PR作成/更新 | コードレビュー |
-| `readme-translation-codex.yml` | README.md変更 | 日本語翻訳 |
+|------------|--------------------|----------------------------|
+| `auto-release-notes.yml` | push（タグ `v*`） | リリースノートの自動生成 |
+| `issue-response-codex.yml` | Issue作成／編集、コメント投稿 | Issueへの自動応答 |
+| `beta-code-review-codex.yml` | PR作成／更新 | コードレビュー (ベータ版) |
+| `beta-document-quality-check.yml` | Markdownファイル変更 | ドキュメント品質チェック (ベータ版) |
+| `beta-readme-translation-codex.yml` | README.md変更 | README翻訳 (ベータ版) |
+
+※ `beta-*.yml` はベータ版です。実験的機能のため、利用時はご注意ください。
 
 ## 🔧 カスタマイズ
 
