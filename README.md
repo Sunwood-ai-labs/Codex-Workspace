@@ -26,6 +26,7 @@
 - 📝 **ドキュメント品質チェック**: READMEやドキュメントの品質を自動で確認し、改善提案をPRで実施
 - 🔍 **コードレビュー**: PRのコードを自動レビューし、改善点を提案
 - 🌐 **README翻訳**: README.mdを日本語に自動翻訳してPRを作成
+- 📜 **リリースノート自動生成**: タグpush時にCodexでリリースノートを生成し、GitHub Releaseを作成
 
 ## 📦 セットアップ
 
@@ -79,20 +80,29 @@ GitHubリポジトリの Settings > Secrets で以下を追加してください
 2. Codexが変更内容をレビュー
 3. 改善提案をコメントとして投稿
 
-### README翻訳
+ ### README翻訳
 
 1. README.mdを更新
 2. 自動的に日本語版を作成
-3. README.ja.mdとしてPRを作成
+ 3. README.ja.mdとしてPRを作成
+   
+ ### リリースノート自動生成
+
+ 1. タグを `v*` の形式で push
+ 2. auto-release-notes ワークフローが実行され、変更差分を解析して `release_notes.md` を生成
+ 3. `release_notes.md` に基づいて GitHub Release を作成
 
 ## ⚙️ ワークフロー一覧
 
 | ワークフロー | トリガー | 説明 |
-|------------|--------|------|
-| `issue-response-codex.yml` | Issue作成/更新 | Issueへの自動応答 |
-| `document-quality-check.yml` | Markdownファイル変更 | ドキュメント品質チェック |
-| `code-review-codex.yml` | PR作成/更新 | コードレビュー |
-| `readme-translation-codex.yml` | README.md変更 | 日本語翻訳 |
+|------------|--------------------|----------------------------|
+| `auto-release-notes.yml` | push（タグ `v*`） | リリースノートの自動生成 |
+| `issue-response-codex.yml` | Issue作成／編集、コメント投稿 | Issueへの自動応答 |
+| `beta-code-review-codex.yml` | PR作成／更新 | コードレビュー (ベータ版) |
+| `beta-document-quality-check.yml` | Markdownファイル変更 | ドキュメント品質チェック (ベータ版) |
+| `beta-readme-translation-codex.yml` | README.md変更 | README翻訳 (ベータ版) |
+
+※ `beta-*.yml` はベータ版です。実験的機能のため、利用時はご注意ください。
 
 ## 🔧 カスタマイズ
 
