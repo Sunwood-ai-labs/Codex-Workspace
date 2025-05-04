@@ -1,131 +1,54 @@
-name: Auto Release Notes with Codex
+name: Auto Label Issues
 
 on:
-  push:
-    tags:
-      - 'v*'
+  issues:
+    types: [opened]
 
 permissions:
-  contents: write
+  issues: write
 
 jobs:
-  create-release-notes:
+  auto-label:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
       - name: Install OpenAI Codex
-        run: npm install -g @openai/codex
+        run: npm install -g @openai/codex@0.1.2504251709
         
-      - name: Generate Diff File
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install GitHub CLI
         run: |
-          # 現在のタグと前のタグを取得
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || echo "")
+          type -p curl >/dev/null || apt install curl -y
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
           
-          # タグ間の差分を生成してファイルに保存
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "タグ間の差分を生成中: ${PREVIOUS_TAG}..${CURRENT_TAG}"
-            git diff ${PREVIOUS_TAG}..${CURRENT_TAG} > diff.txt
-            echo "コミットログを生成中: ${PREVIOUS_TAG}..${CURRENT_TAG}"
-            git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"%h - %s%n%b%n" > commits.txt
-          else
-            echo "初回リリース: すべての変更を含めます"
-            git diff $(git rev-list --max-parents=0 HEAD)..HEAD > diff.txt
-            git log --pretty=format:"%h - %s%n%b%n" > commits.txt
-          fi
-          
-          # 変更されたファイルのリストを生成
-          if [ -n "$PREVIOUS_TAG" ]; then
-            git diff --name-status ${PREVIOUS_TAG}..${CURRENT_TAG} > changed_files.txt
-          else
-            git diff --name-status $(git rev-list --max-parents=0 HEAD)..HEAD > changed_files.txt
-          fi
-      
-      - name: Generate Release Notes
+      - name: Auto-label Issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CODEX_QUIET_MODE: "1"
-          CODEX_NO_TTY: "1"
         run: |
-          # 現在のタグと前のタグを取得
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || echo "")
+          # Codexに必要なラベルを作成・確認してから、issueにラベルを付与させる
+          codex --full-auto "以下の手順で実行してください：
           
-          # Codexにリリースノートの生成を指示
-          codex -a auto-edit --quiet "以下の情報を使ってリリースノートを作成し、release_notes.mdファイルに保存してください：
+          Issue番号: #${{ github.event.issue.number }}
+          タイトル: ${{ github.event.issue.title }}
+          内容: ${{ github.event.issue.body }}
           
-          現在のタグ: ${CURRENT_TAG}
-          前回のタグ: ${PREVIOUS_TAG}
+          1. まず現在のラベル一覧を確認：
+          gh label list
           
-          実行してください：
-          1. 以下のファイルを読み込んで分析してください:
-             - diff.txt: 2つのタグ間のコード差分
-             - commits.txt: コミットログ
-             - changed_files.txt: 変更されたファイルのリスト
+          2. 必要なラベルがない場合は作成（例：bugラベルがない場合）：
+          gh label create bug --color 'ee0701' --description 'バグに関するissue'
+          gh label create documentation --color '0052cc' --description 'ドキュメントに関するissue'
+          gh label create enhancement --color '0e8a16' --description '機能改善・追加の提案'
+          gh label create 'help wanted' --color '5319e7' --description 'サポートが必要なissue'
+          gh label create question --color 'd876e3' --description '質問に関するissue'
           
-          2. これらのファイルを分析して、以下を含むリリースノートを作成：
-             - 新機能
-             - バグ修正
-             - 破壊的変更
-             - その他の改善
+          3. issueの内容を分析して適切なラベルを選択：
+          gh issue edit ${{ github.event.issue.number }} --add-label 'bug'
+          （例：バグの場合は'bug'、ドキュメントの場合は'documentation'）
           
-          3. リリースノートをrelease_notes.mdファイルに保存
-          
-          リリースノートは以下の形式でフォーマットしてください：
-          # Release ${CURRENT_TAG}: [リリースノートのタイトルをここに記入]
-          
-          ## 🚀 新機能
-          - 機能の説明
-          
-          ## 🐛 バグ修正
-          - 修正内容の説明
-          
-          ## ⚠️ 破壊的変更
-          - 変更内容の説明
-          
-          前回のタグが存在しない場合は、初回リリースとして適切なメッセージを作成してください。
-      
-          ファイルの作成は以下のように実行してください：
-          echo '# Release ${CURRENT_TAG}' > release_notes.md
-          echo '' >> release_notes.md
-          # ... (他の内容) ...
-          "
-          
-          # デバッグ用にリリースノートの内容を表示
-          if [ -f release_notes.md ]; then
-            echo "生成されたリリースノート:"
-            cat release_notes.md
-          else
-            echo "リリースノートの生成に失敗しました"
-          fi
-      
-      - name: Create Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          CURRENT_TAG=${GITHUB_REF#refs/tags/}
-          # release_notes.mdが存在する場合はそれを使用
-          if [ -f release_notes.md ]; then
-            gh release create ${CURRENT_TAG} --title "🚀 Release ${CURRENT_TAG}" --notes-file release_notes.md
-          else
-            # Codexが失敗した場合のフォールバック
-            echo "# Release ${CURRENT_TAG}" > fallback_notes.md
-            echo "" >> fallback_notes.md
-            PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${CURRENT_TAG}^ 2>/dev/null || echo "")
-            if [ -n "$PREVIOUS_TAG" ]; then
-              echo "## コミット一覧" >> fallback_notes.md
-              git log ${PREVIOUS_TAG}..${CURRENT_TAG} --pretty=format:"- %s" >> fallback_notes.md
-            else
-              echo "## 初回リリース" >> fallback_notes.md
-              echo "このリポジトリの初回リリースです。" >> fallback_notes.md
-            fi
-            gh release create ${CURRENT_TAG} --title "🌟 Release ${CURRENT_TAG}" --notes-file fallback_notes.md
-          fi
+          4. 最後に現在のラベル一覧を表示：
+          gh label list"
